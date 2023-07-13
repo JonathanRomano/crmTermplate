@@ -73,8 +73,6 @@ export async function saveProposal(proposal: {
       `
     }) as [any];
 
-    console.log("proposal: ",insertedProposal)
-
     insertedProposal.client = JSON.parse(insertedProposal.client);
     insertedProposal.defaultContact = JSON.parse(insertedProposal.defaultContact);
 
@@ -129,4 +127,51 @@ export async function getClientList() {
   });
 
   return JSON.parse(clients) as Client[];
+};
+
+export async function getProposals() {
+  const proposals = await executeQuery({
+    query: `
+    SELECT
+    proposals.id,
+    JSON_OBJECT(
+      'id', clients.id,
+      'entity', clients.entity,
+      'type', clients.type,
+      'contacts', JSON_ARRAYAGG(
+        JSON_OBJECT(
+          'id', contacts.id,
+          'name', contacts.name,
+          'email', contacts.email,
+          'phone', contacts.phone
+        )
+      )
+    ) AS client,
+    JSON_OBJECT(
+      'id', contacts.id,
+      'name', contacts.name,
+      'email', contacts.email,
+      'phone', contacts.phone
+    ) AS defaultContact,
+    proposals.value,
+    proposals.startDate,
+    proposals.endDate,
+    proposals.status
+  FROM
+    proposals
+    JOIN clients ON proposals.client_id = clients.id
+    JOIN contacts ON proposals.defaultContact_id = contacts.id
+  GROUP BY
+    proposals.id;
+    `,
+  });
+
+  
+
+  (proposals as any).map((proposal: any) => {
+    proposal.client = JSON.parse(proposal.client);
+    proposal.defaultContact = JSON.parse(proposal.defaultContact);
+  }) 
+  
+  return proposals as Proposal[]
 };
