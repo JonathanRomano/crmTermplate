@@ -1,10 +1,7 @@
-interface Contact {
-    name: string,
-    email: string,
-    phone: string
-}
+import Contact from "./Contact"
 
 interface Client {
+    id?: number | string,
     entity: string,
     type: 'Company' | 'City' | 'Shopping',
     contacts: Contact[]
